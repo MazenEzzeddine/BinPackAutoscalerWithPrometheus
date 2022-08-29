@@ -56,9 +56,9 @@ public class PrometheusHttpClient  implements Runnable{
 
 
 
-    public static void main(String[] args)  {
+/*    public static void main(String[] args)  {
 
-    }
+    }*/
 
 
     private static  void queryConsumerGroup() throws ExecutionException, InterruptedException {
@@ -311,37 +311,6 @@ public class PrometheusHttpClient  implements Runnable{
 
 
 
-
-
-
-    private static void youMightWanttoScale(double totalArrivalRate) throws ExecutionException, InterruptedException {
-        int size = consumerGroupDescriptionMap.get(PrometheusHttpClient.CONSUMER_GROUP).members().size();
-        log.info("curent group size is {}", size);
-
-       /* if (Duration.between(lastUpScaleDecision, Instant.now()).toSeconds() >= 30 ) {
-            log.info("Upscale logic, Up scale cool down has ended");
-
-            upScaleLogic(totalArrivalRate, size);
-        } else {
-            log.info("Not checking  upscale logic, Up scale cool down has not ended yet");
-        }
-        if (Duration.between(lastDownScaleDecision, Instant.now()).toSeconds() >= 30 ) {
-            log.info("DownScaling logic, Down scale cool down has ended");
-            downScaleLogic(totalArrivalRate, size);
-        }else {
-            log.info("Not checking  down scale logic, down scale cool down has not ended yet");
-        }*/
-
-
-        if (Duration.between(lastUpScaleDecision, Instant.now()).toSeconds() >= 30) {
-            log.info("Upscale logic, Up scale cool down has ended");
-
-            scale(totalArrivalRate, size);
-        }
-    }
-
-
-
     private static Double parseJsonArrivalRate(String json, int p) {
         //json string from prometheus
         //{"status":"success","data":{"resultType":"vector","result":[{"metric":{"topic":"testtopic1"},"value":[1659006264.066,"144.05454545454546"]}]}}
@@ -409,61 +378,9 @@ public class PrometheusHttpClient  implements Runnable{
 
 
 
-    private static void scale (double totalArrivalRate,int size) {
-
-        int reco = (int) Math.ceil(totalArrivalRate / poll);
-        log.info("recommended number of replicas {}", reco);
-
-        if (reco != size) {
-            try (final KubernetesClient k8s = new DefaultKubernetesClient()) {
-                k8s.apps().deployments().inNamespace("default").withName("cons1persec").scale(reco);
-
-            }
-
-        }
-
-        lastUpScaleDecision = Instant.now();
-        lastDownScaleDecision = Instant.now();
 
 
-        log.info("S(int) Math.ceil(totalArrivalRate / poll) {}  ", reco );
-    }
 
-
-    private static void upScaleLogic(double totalArrivalRate, int size) {
-        log.info("current totalArrivalRate {}, group size {}", totalArrivalRate, size);
-        if (totalArrivalRate > size *poll) {
-            log.info("Consumers are less than nb partition we can scale");
-            int reco = (int) Math.ceil(totalArrivalRate/poll);
-            log.info("recommended number of replicas {}", reco);
-            try (final KubernetesClient k8s = new DefaultKubernetesClient()) {
-                k8s.apps().deployments().inNamespace("default").withName("cons1persec").scale(size +1);
-                log.info("Since  arrival rate {} is greater than  maximum consumption rate " +
-                        "{} ,  I up scaled  by one ", totalArrivalRate , size * poll);
-            }
-            lastUpScaleDecision = Instant.now();
-            lastDownScaleDecision = Instant.now();
-        }
-    }
-
-    private static void downScaleLogic(double totalArrivalRate, int size) {
-        if ((totalArrivalRate ) < (size - 1) * poll) {
-            log.info("since  arrival rate {} is lower than maximum consumption rate " +
-                            " with size - 1  I down scaled  by one {}",
-                    totalArrivalRate, size * poll);
-            try (final KubernetesClient k8s = new DefaultKubernetesClient()) {
-                int replicas = k8s.apps().deployments().inNamespace("default").withName("cons1persec").get().getSpec().getReplicas();
-                if (replicas > 1) {
-                    k8s.apps().deployments().inNamespace("default").withName("cons1persec").scale(replicas - 1);
-                    lastDownScaleDecision = Instant.now();
-                    lastUpScaleDecision = Instant.now();
-
-                } else {
-                    log.info("Not going to  down scale since replicas already one");
-                }
-            }
-        }
-    }
 
     @Override
     public void run() {
@@ -532,7 +449,7 @@ public class PrometheusHttpClient  implements Runnable{
         String p11lag = "http://prometheus-operated:9090/api/v1/query?query=" +
                 "kafka_consumergroup_lag%7Bconsumergroup=%22testgroup1%22,topic=%22testtopic2%22,partition=%2211%22,namespace=%22default%22%7D";*/
 
-        List<URI> targets = null;
+        List<URI> targets = new ArrayList<>();
         try {
             targets = Arrays.asList(
                     new URI(all3),
@@ -542,7 +459,7 @@ public class PrometheusHttpClient  implements Runnable{
             e.printStackTrace();
         }
 
-        List<URI> partitions = null;
+        List<URI> partitions= new ArrayList<>();
         try {
             partitions = Arrays.asList(
                     new URI(p0),
@@ -561,7 +478,7 @@ public class PrometheusHttpClient  implements Runnable{
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        List<URI> partitionslag = null;
+        List<URI> partitionslag= new ArrayList<>();
         try {
             partitionslag = Arrays.asList(
                     new URI(p0lag),
@@ -585,9 +502,9 @@ public class PrometheusHttpClient  implements Runnable{
         for (int i = 0; i<=4; i++) {
             topicpartitions.add(new Partition(i, 0, 0));
         }
-        log.info("created the 5 partitions");
+       // log.info("created the 5 partitions");
 
-        while (true) {
+        while(true) {
             Instant start = Instant.now();
             List<CompletableFuture<String>> futures = targets.stream()
                     .map(target -> client
@@ -621,17 +538,13 @@ public class PrometheusHttpClient  implements Runnable{
                 if(arrival) {
                     try {
                         parseJson((String) cf.get());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
+                    } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
                 } else {
                     try {
                         parseJsonLag((String) cf.get());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
+                    } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
                 }
@@ -639,20 +552,16 @@ public class PrometheusHttpClient  implements Runnable{
             }
 
             int partitionn = 0;
-            Double totalarrivals=0.0;
+            double totalarrivals=0.0;
             for (CompletableFuture cf : partitionsfutures) {
                 try {
                     topicpartitions.get(partitionn).setArrivalRate(parseJsonArrivalRate((String) cf.get(), partitionn), false);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
                 try {
                     totalarrivals += parseJsonArrivalRate((String) cf.get(), partitionn);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
                 partitionn++;
@@ -661,21 +570,17 @@ public class PrometheusHttpClient  implements Runnable{
             }
             log.info("totalArrivalRate {}", totalarrivals);
             partitionn = 0;
-            Double totallag=0.0;
+            double totallag=0.0;
             for (CompletableFuture cf : partitionslagfuture) {
                 try {
                     topicpartitions.get(partitionn).setLag(parseJsonArrivalLag((String) cf.get(), partitionn).longValue(), false);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
 
                 try {
                     totallag += parseJsonArrivalLag((String) cf.get(), partitionn);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
                 partitionn++;
@@ -698,9 +603,7 @@ public class PrometheusHttpClient  implements Runnable{
 
             try {
                 queryConsumerGroup();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
 
