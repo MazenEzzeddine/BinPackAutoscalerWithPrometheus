@@ -703,13 +703,11 @@ public class PrometheusHttpClient  implements Runnable{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            try {
-                youMightWanttoScale(totalarrivals);
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+
+
+            youMightWanttoScaleUsingBinPack();
+            //youMightWanttoScale(totalarrivals);
+
             //youMightWanttoScaleUsingBinPack();
 
             log.info("sleeping for 5000ms");
