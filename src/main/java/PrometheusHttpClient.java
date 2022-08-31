@@ -52,6 +52,7 @@ public class PrometheusHttpClient  implements Runnable{
     static Instant lastScaleUpDecision;
     static Instant lastScaleDownDecision;
     static Instant lastCGQuery;
+    static Instant startTime;
     static Integer cooldown;
 
 
@@ -95,7 +96,20 @@ public class PrometheusHttpClient  implements Runnable{
     private static void youMightWanttoScaleUsingBinPack() {
         log.info("Calling the bin pack scaler");
         int size = consumerGroupDescriptionMap.get(PrometheusHttpClient.CONSUMER_GROUP).members().size();
-        if(Duration.between(lastScaleUpDecision, Instant.now()).toSeconds() >= 30) {
+
+
+       /* if(Duration.between(startTime, Instant.now()).toSeconds() <= 90 ) {
+
+            log.info("Warm up period period has not elapsed yet not taking decisions");
+            return;
+        }
+*/
+
+
+
+
+
+        if(Duration.between(lastScaleUpDecision, Instant.now()).toSeconds() >= 15 ) {
             scaleAsPerBinPack(size);
         } else {
             log.info("Scale  cooldown period has not elapsed yet not taking decisions");
@@ -389,7 +403,16 @@ public class PrometheusHttpClient  implements Runnable{
         lastDownScaleDecision = Instant.now();
         lastScaleUpDecision=  Instant.now();
         lastScaleDownDecision = Instant.now();
+        startTime = Instant.now();
 
+        log.info("Sleeping for 1.5 minutes to warmup");
+
+      /*  try {
+            Thread.sleep(90*1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+*/
         HttpClient client = HttpClient.newHttpClient();
         String all3 = "http://prometheus-operated:9090/api/v1/query?" +
                 "query=sum(rate(kafka_topic_partition_current_offset%7Btopic=%22testtopic1%22,namespace=%22default%22%7D%5B1m%5D))%20by%20(topic)";
