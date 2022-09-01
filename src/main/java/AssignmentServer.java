@@ -69,6 +69,18 @@ public class AssignmentServer implements Runnable{
            //TODO Synchronize access to assignment
             List<Consumer> assignment = PrometheusHttpClient.assignment;
             log.info("The assignment is {}", assignment);
+
+            if(assignment.size() == 0) {
+
+                Consumer c = new Consumer(0,500L,100);
+                c.assignPartition(new Partition(0, 0L,0.0d));
+                c.assignPartition(new Partition(1, 1L,1d));
+                c.assignPartition(new Partition(2, 2L,2d));
+                c.assignPartition(new Partition(3, 3L,3d));
+                c.assignPartition(new Partition(4, 4L,4d));
+                assignment.add(c);
+
+            }
             List<ConsumerGrpc> assignmentReply = new ArrayList<>(assignment.size());
 
             for (Consumer cons : assignment) {

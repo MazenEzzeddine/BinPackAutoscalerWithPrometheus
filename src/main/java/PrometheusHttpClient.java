@@ -33,7 +33,6 @@ public class PrometheusHttpClient  implements Runnable{
     static Instant lastDownScaleDecision;
     static Long sleep;
     static String topic;
-    static String cluster;
     static Long poll;
     static String BOOTSTRAP_SERVERS;
     public static String CONSUMER_GROUP;
@@ -44,7 +43,6 @@ public class PrometheusHttpClient  implements Runnable{
     static ArrayList<Partition> topicpartitions = new ArrayList<>();
 
 
-    static double dynamicTotalMaxConsumptionRate = 0.0;
     static double dynamicAverageMaxConsumptionRate = 0.0;
 
     static double wsla = 5.0;
@@ -95,13 +93,17 @@ public class PrometheusHttpClient  implements Runnable{
         log.info("Calling the bin pack scaler");
         int size = consumerGroupDescriptionMap.get(PrometheusHttpClient.CONSUMER_GROUP).members().size();
 
+        if(size==0)
+            return;
 
-       /* if(Duration.between(startTime, Instant.now()).toSeconds() <= 90 ) {
+/*
+        if(Duration.between(startTime, Instant.now()).toSeconds() <= 90 ) {
 
             log.info("Warm up period period has not elapsed yet not taking decisions");
             return;
-        }
-*/
+        }*/
+
+
         if(Duration.between(lastScaleUpDecision, Instant.now()).toSeconds() >= 15 ) {
             scaleAsPerBinPack(size);
         } else {
@@ -556,7 +558,7 @@ public class PrometheusHttpClient  implements Runnable{
 
             //youMightWanttoScaleUsingBinPack();
 
-            log.info("sleeping for 5000ms");
+            log.info("sleeping for 30 s");
             log.info("==================================================");
 
             try {
