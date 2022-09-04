@@ -43,7 +43,7 @@ public class PrometheusHttpClient  implements Runnable{
     static double dynamicAverageMaxConsumptionRate = 0.0;
 
     static double wsla = 5.0;
-    static List<Consumer> assignment;
+    static List<Consumer> assignment = new ArrayList<>();
     static Instant lastScaleUpDecision;
     static Instant lastScaleDownDecision;
     static Instant lastCGQuery;
@@ -80,11 +80,11 @@ public class PrometheusHttpClient  implements Runnable{
         int size = consumerGroupDescriptionMap.get(PrometheusHttpClient.CONSUMER_GROUP).members().size();
         if(size==0)
             return;
-        /*if(Duration.between(startTime, Instant.now()).toSeconds() <= 90 ) {
+        if(Duration.between(startTime, Instant.now()).toSeconds() <= 140 ) {
 
             log.info("Warm up period period has not elapsed yet not taking decisions");
             return;
-        }*/
+        }
         if(Duration.between(lastScaleUpDecision, Instant.now()).toSeconds() >= 15 ) {
             scaleAsPerBinPack(size);
         } else {

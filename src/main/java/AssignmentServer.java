@@ -72,13 +72,24 @@ public class AssignmentServer implements Runnable{
 
             if(assignment.size() == 0) {
 
-                Consumer c = new Consumer(0,500L,100);
-                c.assignPartition(new Partition(0, 0L,0.0d));
-                c.assignPartition(new Partition(1, 1L,1d));
-                c.assignPartition(new Partition(2, 2L,2d));
-                c.assignPartition(new Partition(3, 3L,3d));
-                c.assignPartition(new Partition(4, 4L,4d));
-                assignment.add(c);
+                Consumer c0 = new Consumer(0,500L,100);
+                Consumer c1 = new Consumer(0,500L,100);
+                Consumer c2 = new Consumer(0,500L,100);
+                Consumer c3 = new Consumer(0,500L,100);
+                Consumer c4 = new Consumer(0,500L,100);
+                c0.assignPartition(new Partition(0, 0L,0.0d));
+                c1.assignPartition(new Partition(1, 0L,0.0d));
+                c2.assignPartition(new Partition(2, 0L,0.0d));
+                c3.assignPartition(new Partition(3, 0L,0.0d));
+                c4.assignPartition(new Partition(4, 0L,0.0d));
+
+
+                assignment.add(c0);
+                assignment.add(c1);
+                assignment.add(c2);
+                assignment.add(c3);
+                assignment.add(c4);
+
 
             }
             List<ConsumerGrpc> assignmentReply = new ArrayList<>(assignment.size());
