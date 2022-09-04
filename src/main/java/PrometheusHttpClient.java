@@ -39,10 +39,7 @@ public class PrometheusHttpClient  implements Runnable{
     public static AdminClient admin = null;
     static Map<String, ConsumerGroupDescription> consumerGroupDescriptionMap;
     static int size;
-
     static ArrayList<Partition> topicpartitions = new ArrayList<>();
-
-
     static double dynamicAverageMaxConsumptionRate = 0.0;
 
     static double wsla = 5.0;
@@ -52,11 +49,6 @@ public class PrometheusHttpClient  implements Runnable{
     static Instant lastCGQuery;
     static Instant startTime;
     static Integer cooldown;
-
-
-
-
-
 
     private static  void queryConsumerGroup() throws ExecutionException, InterruptedException {
         DescribeConsumerGroupsResult describeConsumerGroupsResult =
@@ -81,29 +73,18 @@ public class PrometheusHttpClient  implements Runnable{
     }
 
 
-
-
-
-
-
-
     //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static void youMightWanttoScaleUsingBinPack() {
         log.info("Calling the bin pack scaler");
         int size = consumerGroupDescriptionMap.get(PrometheusHttpClient.CONSUMER_GROUP).members().size();
-
         if(size==0)
             return;
-
-/*
-        if(Duration.between(startTime, Instant.now()).toSeconds() <= 90 ) {
+        /*if(Duration.between(startTime, Instant.now()).toSeconds() <= 90 ) {
 
             log.info("Warm up period period has not elapsed yet not taking decisions");
             return;
         }*/
-
-
         if(Duration.between(lastScaleUpDecision, Instant.now()).toSeconds() >= 15 ) {
             scaleAsPerBinPack(size);
         } else {
@@ -365,10 +346,7 @@ public class PrometheusHttpClient  implements Runnable{
         lastScaleUpDecision=  Instant.now();
         lastScaleDownDecision = Instant.now();
         startTime = Instant.now();
-
         log.info("Sleeping for 1.5 minutes to warmup");
-
-
         HttpClient client = HttpClient.newHttpClient();
         String all3 = "http://prometheus-operated:9090/api/v1/query?" +
                 "query=sum(rate(kafka_topic_partition_current_offset%7Btopic=%22testtopic1%22,namespace=%22default%22%7D%5B1m%5D))%20by%20(topic)";
@@ -510,10 +488,11 @@ public class PrometheusHttpClient  implements Runnable{
                     e.printStackTrace();
                 }
                 partitionn++;
-
-
             }
             log.info("totalArrivalRate {}", totalarrivals);
+
+
+
             partitionn = 0;
             double totallag=0.0;
             for (CompletableFuture cf : partitionslagfuture) {
@@ -522,7 +501,6 @@ public class PrometheusHttpClient  implements Runnable{
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-
                 try {
                     totallag += parseJsonArrivalLag((String) cf.get(), partitionn);
                 } catch (InterruptedException | ExecutionException e) {
@@ -530,6 +508,8 @@ public class PrometheusHttpClient  implements Runnable{
                 }
                 partitionn++;
             }
+
+
             log.info("totalLag {}", totallag);
             Instant end = Instant.now();
             log.info("Duration in seconds to query prometheus for " +
@@ -552,12 +532,7 @@ public class PrometheusHttpClient  implements Runnable{
                 e.printStackTrace();
             }
 
-
             youMightWanttoScaleUsingBinPack();
-            //youMightWanttoScale(totalarrivals);
-
-            //youMightWanttoScaleUsingBinPack();
-
             log.info("sleeping for 30 s");
             log.info("==================================================");
 
