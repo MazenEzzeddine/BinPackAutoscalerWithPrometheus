@@ -169,7 +169,7 @@ public class PrometheusHttpClient  implements Runnable{
                 //TODO externalize these choices on the inout to the FFD bin pack
                 // TODO  hey stupid use instatenous lag instead of average lag.
                 // TODO average lag is a decision on past values especially for long DI.
-                if (cons.getRemainingLagCapacity() >=  partition.getLag()  &&
+                if (/*cons.getRemainingLagCapacity() >=  partition.getLag()  &&*/
                         cons.getRemainingArrivalCapacity() >= partition.getArrivalRate()) {
                     cons.assignPartition(partition);
                     // we are done with this partition, go to next
