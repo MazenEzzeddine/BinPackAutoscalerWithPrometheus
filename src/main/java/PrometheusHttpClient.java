@@ -532,7 +532,13 @@ public class PrometheusHttpClient  implements Runnable{
                 e.printStackTrace();
             }
 
-            youMightWanttoScaleUsingBinPack();
+            //youMightWanttoScaleUsingBinPack();
+            log.info("calling youmightwanttoscaler (linear), arrivals {}", totalarrivals);
+            try {
+                youMightWanttoScale(totalarrivals);
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
             log.info("sleeping for 30 s");
             log.info("==================================================");
 
@@ -542,5 +548,47 @@ public class PrometheusHttpClient  implements Runnable{
                 e.printStackTrace();
             }
         }
+    }
+
+
+    private static void youMightWanttoScale(double totalArrivalRate) throws ExecutionException, InterruptedException {
+        int size = consumerGroupDescriptionMap.get(PrometheusHttpClient.CONSUMER_GROUP).members().size();
+        log.info("curent group size is {}", size);
+
+        if(size==0)
+            return;
+        if(Duration.between(startTime, Instant.now()).toSeconds() <= 140 ) {
+
+            log.info("Warm up period period has not elapsed yet not taking decisions");
+            return;
+        }
+
+
+        if (Duration.between(lastUpScaleDecision, Instant.now()).toSeconds() >= 30) {
+            log.info("Upscale logic, Up scale cool down has ended");
+
+            scale(totalArrivalRate, size);
+        }
+    }
+
+
+    private static void scale (double totalArrivalRate,int size) {
+
+        int reco = (int) Math.ceil(totalArrivalRate / poll);
+        log.info("recommended number of replicas {}", reco);
+
+        if (reco != size) {
+            try (final KubernetesClient k8s = new DefaultKubernetesClient()) {
+                k8s.apps().deployments().inNamespace("default").withName("cons1persec").scale(reco);
+
+            }
+
+        }
+
+        lastUpScaleDecision = Instant.now();
+        lastDownScaleDecision = Instant.now();
+
+
+        log.info("S(int) Math.ceil(totalArrivalRate / poll) {}  ", reco );
     }
 }
