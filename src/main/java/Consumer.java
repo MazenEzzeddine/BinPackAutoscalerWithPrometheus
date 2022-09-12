@@ -4,12 +4,12 @@ import java.util.List;
 public class Consumer {
     private final Long lagCapacity;
     private final double arrivalCapacity;
-    private final int id;
+    private final String id;
     private double remainingArrivalCapacity;
     private List<Partition> assignedPartitions;
     private Long remainingLagCapacity;
 
-    public Consumer(int id, Long lagCapacity, double arrivalCapacity) {
+    public Consumer(String id, Long lagCapacity, double arrivalCapacity) {
         this.lagCapacity = lagCapacity;
         this.arrivalCapacity = arrivalCapacity;
         this.id = id;
@@ -19,7 +19,7 @@ public class Consumer {
         assignedPartitions = new ArrayList<>();
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
     public Long getRemainingLagCapacity() {

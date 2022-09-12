@@ -72,7 +72,7 @@ public class AssignmentServer implements Runnable{
 
             if(assignment.size() == 0) {
 
-                Consumer c0 = new Consumer(0,500L,100);
+                /*Consumer c0 = new Consumer(0,500L,100);
                 Consumer c1 = new Consumer(0,500L,100);
                 Consumer c2 = new Consumer(0,500L,100);
                 Consumer c3 = new Consumer(0,500L,100);
@@ -88,7 +88,19 @@ public class AssignmentServer implements Runnable{
                 assignment.add(c1);
                 assignment.add(c2);
                 assignment.add(c3);
-                assignment.add(c4);
+                assignment.add(c4);*/
+
+
+                Consumer c0 = new Consumer("cons100-0",500L,100);
+                Consumer c1 = new Consumer("cons200-0",500L,100);
+
+                c0.assignPartition(new Partition(0, 0L,0.0d));
+                c0.assignPartition(new Partition(1, 0L,0.0d));
+                c1.assignPartition(new Partition(2, 0L,0.0d));
+                c1.assignPartition(new Partition(3, 0L,0.0d));
+                c1.assignPartition(new Partition(4, 0L,0.0d));
+                assignment.add(c0);
+                assignment.add(c1);
 
 
             }

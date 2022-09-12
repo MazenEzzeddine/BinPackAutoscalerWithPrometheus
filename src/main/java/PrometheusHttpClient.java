@@ -139,7 +139,7 @@ public class PrometheusHttpClient  implements Runnable{
 
         long maxLagCapacity;
         maxLagCapacity = (long) (dynamicAverageMaxConsumptionRate * wsla);
-        consumers.add(new Consumer(consumerCount, maxLagCapacity, dynamicAverageMaxConsumptionRate));
+        consumers.add(new Consumer((String.valueOf(consumerCount)), maxLagCapacity, dynamicAverageMaxConsumptionRate));
 
         //if a certain partition has a lag higher than R Wmax set its lag to R*Wmax
         // atention to the window
@@ -179,7 +179,7 @@ public class PrometheusHttpClient  implements Runnable{
                 //we shall create a new consumer i.e., scale up
                 if (cons == consumers.get(consumers.size() - 1)) {
                     consumerCount++;
-                    consumer = new Consumer(consumerCount, (long) (dynamicAverageMaxConsumptionRate * wsla),
+                    consumer = new Consumer((String.valueOf(consumerCount)), (long) (dynamicAverageMaxConsumptionRate * wsla),
                             dynamicAverageMaxConsumptionRate);
                     consumer.assignPartition(partition);
                 }
@@ -232,9 +232,9 @@ public class PrometheusHttpClient  implements Runnable{
         if (consumers.isEmpty()) {
             return;
         }// Track total lag assigned to each consumer (for the current topic)
-        final Map<Integer, Double> consumerTotalArrivalRate = new HashMap<>(consumers.size());
-        final Map<Integer, Integer> consumerTotalPartitions = new HashMap<>(consumers.size());
-        final Map<Integer, Double> consumerAllowableArrivalRate = new HashMap<>(consumers.size());
+        final Map<String, Double> consumerTotalArrivalRate = new HashMap<>(consumers.size());
+        final Map<String, Integer> consumerTotalPartitions = new HashMap<>(consumers.size());
+        final Map<String, Double> consumerAllowableArrivalRate = new HashMap<>(consumers.size());
         for (Consumer cons : consumers) {
             consumerTotalArrivalRate.put(cons.getId(), 0.0);
             consumerAllowableArrivalRate.put(cons.getId(), 95.0);
@@ -256,7 +256,7 @@ public class PrometheusHttpClient  implements Runnable{
         for (Partition partition : partitionsArrivalRate) {
             // Assign to the consumer with least number of partitions, then smallest total lag, then smallest id arrival rate
             // returns the consumer with lowest assigned partitions, if all assigned partitions equal returns the min total arrival rate
-            final Integer memberId = Collections
+            final String memberId = Collections
                     .min(consumerTotalArrivalRate.entrySet(), (c1, c2) -> {
 
                         //TODO is that necessary partition count first... not really......
@@ -273,7 +273,7 @@ public class PrometheusHttpClient  implements Runnable{
                         return c1.getKey().compareTo(c2.getKey());
                     }).getKey();
 
-            assignment.get(memberId).assignPartition(partition);
+            //assignment.get(memberId).assignPartition(partition);
             consumerTotalArrivalRate.put(memberId, consumerTotalArrivalRate.getOrDefault(memberId, 0.0) + partition.getArrivalRate());
             consumerTotalPartitions.put(memberId, consumerTotalPartitions.getOrDefault(memberId, 0) + 1);
             log.info(
@@ -533,12 +533,12 @@ public class PrometheusHttpClient  implements Runnable{
             }
 
             //youMightWanttoScaleUsingBinPack();
-            log.info("calling youmightwanttoscaler (linear), arrivals {}", totalarrivals);
+           /* log.info("calling youmightwanttoscaler (linear), arrivals {}", totalarrivals);
             try {
                 youMightWanttoScale(totalarrivals);
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
             log.info("sleeping for 30 s");
             log.info("==================================================");
 

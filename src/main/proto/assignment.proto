@@ -11,7 +11,7 @@ message PartitionGrpc {
 
 
 message ConsumerGrpc {
-  int32 id=1;
+  string id=1;
   repeated PartitionGrpc assignedPartitions=2;
 }
 
